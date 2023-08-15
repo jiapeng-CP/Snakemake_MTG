@@ -22,8 +22,8 @@ def get_fastq2(wildcards):
 
 rule all:
 	input:
-		expand("MetaPhlan/{sample}.txt", sample=SAMPLES),
-		expand("HumanN/{sample}", sample=SAMPLES),
+		allSample.metaphlan.txt,
+		expand("HumanN/{sample}", sample=SAMPLES)
 
 rule KneadData:
 	input: 
@@ -84,6 +84,13 @@ rule MetaPhlan:
 		"mkdir -p MetaPhlan \n"
 		"metaphlan --nproc 8 -t rel_ab_w_read_stats --input_type fastq --output_file {output.profiletxt} {input.fq} > {log} 2>&1"
 
+rule MetaPhlanMerge:
+	input:
+		expand("MetaPhlan/{sample}.txt", sample=SAMPLES)
+	output:
+		allSample.metaphlan.txt
+	shell:
+		merge_metaphlan_tables.py -o allSample.metaphlan.txt MetaPhlan/*.txt
 
 rule humann: # conda activate /home/artemisl/.conda/envs/biobakery
 	input:
