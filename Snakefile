@@ -90,7 +90,7 @@ rule MetaPhlanMerge:
 	output:
 		allSample.metaphlan.txt
 	shell:
-		merge_metaphlan_tables.py -o allSample.metaphlan.txt MetaPhlan/*.txt
+		"merge_metaphlan_tables.py -o allSample.metaphlan.txt MetaPhlan/*.txt"
 
 rule humann: # conda activate /home/artemisl/.conda/envs/biobakery
 	input:
