@@ -22,7 +22,7 @@ def get_fastq2(wildcards):
 
 rule all:
 	input:
-		allSample.metaphlan.txt,
+		"allSample.metaphlan.txt",
 		expand("HumanN/{sample}", sample=SAMPLES)
 
 rule KneadData:
@@ -88,7 +88,7 @@ rule MetaPhlanMerge:
 	input:
 		expand("MetaPhlan/{sample}.txt", sample=SAMPLES)
 	output:
-		allSample.metaphlan.txt
+		"allSample.metaphlan.txt"
 	shell:
 		"merge_metaphlan_tables.py -o allSample.metaphlan.txt MetaPhlan/*.txt"
 
