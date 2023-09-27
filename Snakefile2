@@ -1,0 +1,97 @@
+import pandas as pd
+
+samplesDF = pd.read_csv("samplesheet.tsv", sep="\t", index_col="Sample")
+SAMPLES = []
+sampleFq1 = {}
+sampleFq2 = {}
+
+
+for x in samplesDF.index:
+	SAMPLES.append(x)
+	sampleFq1[x] = samplesDF.loc[x,'fq1']
+	sampleFq2[x] = samplesDF.loc[x,'fq2']
+
+def get_sample(wildcards):
+	return(wildcards.sample)
+
+def get_fastq1(wildcards):
+	return(samplesDF.loc[wildcards.sample,'fq1'])
+
+def get_fastq2(wildcards):
+	return(samplesDF.loc[wildcards.sample,'fq2'])
+
+rule all:
+	input:
+		"allSample.metaphlan.txt",
+		expand("HumanN/{sample}", sample=SAMPLES)
+        
+
+rule fastp:
+	input:
+		r1 = get_fastq1,
+		r2 = get_fastq2
+
+	output:
+		r1 = "fastp/{sample}.r1.fq.gz",
+		r2 = "fastp/{sample}.r2.fq.gz"
+
+	log: "logs/{sample}.fastp.log"
+	threads: 8
+	params:
+		sn = get_sample
+	shell:
+		"mkdir -p fastp \n"
+		"/home/jiapengc/.conda/envs/QC/bin/fastp --in1 {input.r1} "
+		"--in2 {input.r2} "
+		"--out1 {output.r1} "
+		"--out2 {output.r2} "
+		"--json fastp/{params.sn}.json "
+		"--html fastp/{params.sn}.html "
+		"--thread 8"
+        
+        
+rule catFq:
+	input:
+		r1 = "fastp/{sample}.r1.fq.gz",
+		r2 = "fastp/{sample}.r2.fq.gz"
+
+	output:
+		r1r2fq = "catFq/{sample}.r1r2.fq"
+	log: "logs/catFq.log"
+	shell:
+		"mkdir -p catFq \n"
+		"cat {input.41} {input.42} > {output} 2> {log}"
+
+
+rule MetaPhlan:
+	input:
+		fq = "catFq/{sample}.r1r2.fq"
+	output:
+		profiletxt = "MetaPhlan/{sample}.txt"
+	log: "logs/{sample}.MetaPhlan.log"
+	threads: 8
+	shell:
+		"mkdir -p MetaPhlan \n"
+		"metaphlan --nproc 8 -t rel_ab_w_read_stats --input_type fastq --output_file {output.profiletxt} {input.fq} > {log} 2>&1"
+
+rule MetaPhlanMerge:
+	input:
+		expand("MetaPhlan/{sample}.txt", sample=SAMPLES)
+	output:
+		"allSample.metaphlan.txt"
+	shell:
+		"merge_metaphlan_tables.py -o allSample.metaphlan.txt MetaPhlan/*.txt"
+
+rule humann: # conda activate /home/artemisl/.conda/envs/biobakery
+	input:
+		fq = "catFq/{sample}.r1r2.fq"
+	log: "logs/{sample}.humann.stdouterr.log"
+	threads: 8
+	output:
+		ofolder = "HumanN/{sample}"
+	shell:
+		"mkdir -p HumanN \n"
+		"/home/artemisl/.conda/envs/biobakery/bin/humann --threads 8 --input {input.fq} --output {output.ofolder} > {log} 2>&1"
+
+
+
