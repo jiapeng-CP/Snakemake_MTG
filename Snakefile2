@@ -49,7 +49,31 @@ rule fastp:
 		"--html fastp/{params.sn}.html "
 		"--thread 8"
         
-        
+
+rule map2human: #draft
+	input:
+		r1 = "fastp/{sample}.r1.fq.gz",
+		r2 = "fastp/{sample}.r2.fq.gz"
+	output:
+		"{sample}.sam"
+	shell:
+		"/home/jiapengc/.conda/envs/biobakery3/bin/bowtie2 -x /data/databases/human/GRCh38_latest_genomic.fna "
+		"-1 {input.r1} -2 {input.r2} "
+		"-S {sample}.sam "
+		"--un-conc-gz {sample}_host_removed.fastq.gz "
+		"--sensitive --threads 8"
+
+
+rule sam2bam: #draft
+	input:
+		"{sample}.sam"
+	output:
+		"{sample}.bam"
+	shell:
+		"/home/jiapengc/.conda/envs/QC/bin/samtools view -bS --threads 8 out.sam > out.bam"
+		"/home/jiapengc/bin/bamstats --cpu 5 --input out.bam > bamstat.json"
+
+
 rule catFq:
 	input:
 		r1 = "fastp/{sample}.r1.fq.gz",
