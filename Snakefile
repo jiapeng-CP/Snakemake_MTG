@@ -82,7 +82,7 @@ rule MetaPhlan:
 	threads: 8
 	shell:
 		"mkdir -p MetaPhlan \n"
-		"metaphlan --nproc 8 -t rel_ab_w_read_stats --input_type fastq --output_file {output.profiletxt} {input.fq} > {log} 2>&1"
+		"metaphlan --nproc 8 --input_type fastq --output_file {output.profiletxt} {input.fq} > {log} 2>&1"
 
 rule MetaPhlanMerge:
 	input:
