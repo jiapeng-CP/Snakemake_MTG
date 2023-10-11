@@ -33,7 +33,9 @@ rule fastp:
 
 	output:
 		r1 = "fastp/{sample}.r1.fq.gz",
-		r2 = "fastp/{sample}.r2.fq.gz"
+		r2 = "fastp/{sample}.r2.fq.gz",
+		json = "fastp/{sample}.json",
+		html = "fastp/{sample}.html"
 
 	log: "logs/{sample}.fastp.log"
 	threads: 8
@@ -45,8 +47,8 @@ rule fastp:
 		"--in2 {input.r2} "
 		"--out1 {output.r1} "
 		"--out2 {output.r2} "
-		"--json fastp/{params.sn}.json "
-		"--html fastp/{params.sn}.html "
+		"--json {output.json} "
+		"--html {output.html} "
 		"--thread 8"
         
 
