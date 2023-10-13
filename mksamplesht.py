@@ -2,6 +2,7 @@ import pandas as pd
 import glob
 
 metaDF = pd.read_csv("mtt.metadata.tsv", sep = "\t", index_col="SampleID")
+# from run samplesheet, use sed -n '/Sample_ID/,$p' /data/Biosolutions/NextSeqData_2023/231005_NS500274_0085_AH2NNWBGXV/SampleSheet.csv
 SAMPLES = []
 
 
