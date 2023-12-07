@@ -158,7 +158,7 @@ rule humann_regroup:
                 pathabundance_relab_metacyc = "HumanN/{sample}/{sample}_pathabundance_relab_metacyc.tsv"
         log: "logs/{sample}.humann_metacyc.log"
         shell:
-             "humann_regroup --input {input.renorm_table} --output {output.pathabundance_relab_metacyc} --groups uniref90_rxn > {log} 2>&1"
+             "humann_regroup_table --input {input.renorm_table} --output {output.pathabundance_relab_metacyc} --groups uniref90_rxn > {log} 2>&1"
 
 
 #Added by FS: Merge into one feature table for MetaCyc rxn
