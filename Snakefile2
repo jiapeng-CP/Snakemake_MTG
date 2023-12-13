@@ -25,11 +25,10 @@ rule all:
         input:
                 #expand("MetaPhlan/{sample}.txt", sample=SAMPLES),
                 expand("MetaPhlan/{sample}_relabund.txt", sample=SAMPLES),
-                "MetaPhlan/merged_relabundance_table.txt",
+                "MetaPhlan/merged_metaphlan_table.txt",
                 #expand("HumanN/{sample}", sample=SAMPLES),
                 expand("HumanN/{sample}/{sample}_pathabundance_relab.tsv", sample=SAMPLES),
-                expand("HumanN/{sample}/{sample}_pathabundance_relab_metacyc.tsv", sample=SAMPLES),
-                "HumanN/merged_metacyc_table.tsv",
+                #"HumanN/merged_metacyc_table.tsv",
 
 
 rule fastp:
@@ -106,23 +105,26 @@ rule MetaPhlan:
 		"mkdir -p MetaPhlan \n"
 		"metaphlan --nproc 8 --offline --input_type fastq --output_file {output.profiletxt} {input.fq} > {log} 2>&1"
 
-##Added by FS: Option of running MetaPhlan to produce relative abundance and include counts to non-bacteria
+##Added by FS: Option of running MetaPhlan to produce relative abundance with read stats and include counts to non-bacteria
 rule MetaPhlan_RelAbundance:
         input:
                 fq = "catFq/{sample}.all4.fq"
+		#note the catFQ input here is from a version where Kneaddata was used for QC/QA
         output:
                 profiletxt = "MetaPhlan/{sample}_relabund.txt"
-        log: "logs/{sample}.MetaPhlan.relabund.log"
+        log: 
+		"logs/{sample}.MetaPhlan.relabund.log"
         threads: 10
         shell:
                 "metaphlan --nproc 10 --input_type fastq --output_file {output.profiletxt} {input.fq} --add_virus -t rel_ab_w_read_stats > {log} 2>&1"
 
-##Added by FS: Option to merge MetaPhlan_RelAbundance into one feature table
+##Added by FS: Option to merge MetaPhlan into one feature table
+##Note that MetaPhlan version 4 only merges default -t rel_ab tables
 rule MetaPhlan_merge:
         input:
-                table = expand("MetaPhlan/{sample}_relabund.txt", sample=SAMPLES)
+                table = expand("MetaPhlan/{sample}.txt", sample=SAMPLES)
         output:
-                merged_table = "MetaPhlan/merged_relabundance_table.txt"
+                merged_table = "MetaPhlan/merged_metaphlan_table.txt"
         shell:
                 "merge_metaphlan_tables.py {input.table} > {output.merged_table}"
 
@@ -140,33 +142,26 @@ rule humann: # conda activate /home/artemisl/.conda/envs/biobakery
 
 
 ##Added by FS: normalize the pathabundance output files
+##Note: input is again from cat Kneaddata
 rule humann_renorm:
         input:
                 pathabundance = "HumanN/{sample}/{sample}.all4_pathabundance.tsv"
         output:
                 relab_table = "HumanN/{sample}/{sample}_pathabundance_relab.tsv"
-        log: "logs/{sample}.humann_renorm.log"
+        log: 
+		"logs/{sample}.humann_renorm.log"
         shell:
              "humann_renorm_table --input {input.pathabundance} --output {output.relab_table} --units relab > {log} 2>&1"
 
 
-##Added by FS: regroup to MetaCyc rxn as functional category
-rule humann_regroup:
-        input:
-                renorm_table = "HumanN/{sample}/{sample}_pathabundance_relab.tsv"
-        output:
-                pathabundance_relab_metacyc = "HumanN/{sample}/{sample}_pathabundance_relab_metacyc.tsv"
-        log: "logs/{sample}.humann_metacyc.log"
-        shell:
-             "humann_regroup_table --input {input.renorm_table} --output {output.pathabundance_relab_metacyc} --groups uniref90_rxn > {log} 2>&1"
-
-
 #Added by FS: Merge into one feature table for MetaCyc rxn
-rule humann_join_tables:
-        input:
-                pathabundance_relab_metacyc_tables = expand("HumanN/{sample}/{sample}_pathabundance_relab_metacyc.tsv", sample=SAMPLES)
-        output:
-                merged_metacyc_table = "HumanN/merged_metacyc_table.tsv"
-        log: "logs/humann_join_tables_{wildcards.sample}.log"
-        shell:
-            "humann_join_tables --input {input.pathabundance_relab_metacyc_tables} --output {wildcards.sample}_merged_metacyc_table.tsv > {log} 2>&1"
+##Does not work - need to troubleshoot
+#rule humann_join_tables:
+#        input:
+#                pathabundance_relab_table = "/home/fatimas/MTG_analyses/StainBac_Clinical_MTG/HumanN/"
+#        output:
+#                merged_metacyc_table = "HumanN/merged_metacyc_table.tsv"
+#        log: 
+#               "logs/humann_join_tables.log"        
+#        shell:
+#            "/home/artemisl/.conda/envs/biobakery/bin/humann_join_tables -i {input.pathabundance_relab_table} --search-subdirectories --file_name pathabundance_relab  -o {output.merged_metacyc_table} > {log} 2>&1"
