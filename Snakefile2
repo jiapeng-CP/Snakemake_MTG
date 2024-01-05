@@ -112,8 +112,3 @@ rule humann: # conda activate /home/artemisl/.conda/envs/biobakery
 	shell:
 		"mkdir -p HumanN \n"
 		"/home/artemisl/.conda/envs/biobakery/bin/humann --threads 8 --input {input.fq} --output {output.ofolder} > {log} 2>&1"
-
-
-        log: "logs/humann_join_tables_{wildcards.sample}.log"
-        shell:
-            "humann_join_tables --input {input.pathabundance_relab_metacyc_tables} --output {wildcards.sample}_merged_metacyc_table.tsv > {log} 2>&1"
