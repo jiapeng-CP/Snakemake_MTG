@@ -87,7 +87,7 @@ rule catFq:
 	log: "logs/catFq.log"
 	shell:
 		"mkdir -p catFq \n"
-		"cat {input.r1} {input.r2} > {output} 2> {log}"
+		"zcat {input.r1} {input.r2} > {output} 2> {log}"
 
 
 rule MetaPhlan:
