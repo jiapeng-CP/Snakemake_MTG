@@ -111,4 +111,8 @@ rule humann: # conda activate /home/artemisl/.conda/envs/biobakery
 		ofolder = "HumanN/{sample}"
 	shell:
 		"mkdir -p HumanN \n"
-		"/home/artemisl/.conda/envs/biobakery/bin/humann --metaphlan-options=\"--offline\" --threads 8 --input {input.fq} --output {output.ofolder} > {log} 2>&1"
+		"/home/artemisl/.conda/envs/biobakery/bin/humann "
+		"--metaphlan-options=\"--offline\" --threads 8 "
+		"--nucleotide-database /home/jiapengc/db/humannDB/chocophlan "
+		"--protein-database /home/jiapengc/db/humannDB/uniref "
+		"--input {input.fq} --output {output.ofolder} > {log} 2>&1"
