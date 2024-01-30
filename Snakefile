@@ -20,8 +20,8 @@ def get_fastq2(wildcards):
 rule all:
         input:
                 expand("map2human/{sample}.bam", sample=SAMPLES),
-                expand("MetaPhlan/{sample}.txt", sample=SAMPLES),
-                expand("HumanN/{sample}", sample=SAMPLES)
+                #expand("MetaPhlan/{sample}.txt", sample=SAMPLES),
+                #expand("map2HOMD/{sample}.json", sample=SAMPLES),
 
 
 
@@ -62,6 +62,26 @@ rule map2human: #bowtie2 mapping, sam2bam, bamstat
 		"/home/jiapengc/.conda/envs/biobakery3/bin/bowtie2 -x /data/databases/human/GRCh38_latest_genomic.fna "
 		"-1 {input.r1} -2 {input.r2} "
 		"--un-conc-gz map2human/{wildcards.sample}_host_removed.fq.gz "
+		"--sensitive --threads 4 | "
+		"/home/jiapengc/.conda/envs/QC/bin/samtools view -bS -@ 4 > {output.bam} \n"
+		"/home/jiapengc/bin/bamstats --cpu 8 --input {output.bam} > {output.json}"
+
+rule map2HOMD:
+	input:
+		#below fq1&fq2 are the input files, but it won't match the output file names above
+		#fq1 = "map2human/{sample}_host_removed.fq.1.gz",
+		#fq2 = "map2human/{sample}_host_removed.fq.2.gz"
+		#humanstat = "map2human/{sample}.bamstat.json" # this rule doesn't need the human json, put it here as a proxy
+		r1 = "fastp/{sample}.r1.fq.gz", # use fastp reads instead of human rm reads
+		r2 = "fastp/{sample}.r2.fq.gz"
+	output:
+		bam = "map2HOMD/{sample}.bam",
+		json = "map2HOMD/{sample}.json"
+	threads: 8
+	shell:
+		"mkdir -p map2HOMD \n"
+		"/home/jiapengc/.conda/envs/biobakery3/bin/bowtie2 -x /home/jiapengc/db/HOMD/ALL_genomes.fna "
+		"-1 {input.r1} -2 {input.r2} "
 		"--sensitive --threads 4 | "
 		"/home/jiapengc/.conda/envs/QC/bin/samtools view -bS -@ 4 > {output.bam} \n"
 		"/home/jiapengc/bin/bamstats --cpu 8 --input {output.bam} > {output.json}"
