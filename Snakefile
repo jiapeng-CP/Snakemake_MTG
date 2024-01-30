@@ -11,9 +11,6 @@ for x in samplesDF.index:
 	sampleFq1[x] = samplesDF.loc[x,'fq1']
 	sampleFq2[x] = samplesDF.loc[x,'fq2']
 
-def get_sample(wildcards):
-	return(wildcards.sample)
-
 def get_fastq1(wildcards):
 	return(samplesDF.loc[wildcards.sample,'fq1'])
 
@@ -22,6 +19,7 @@ def get_fastq2(wildcards):
 
 rule all:
         input:
+                expand("map2human/{sample}.bam", sample=SAMPLES),
                 expand("MetaPhlan/{sample}.txt", sample=SAMPLES),
                 expand("HumanN/{sample}", sample=SAMPLES)
 
@@ -40,8 +38,6 @@ rule fastp:
 
 	log: "logs/{sample}.fastp.log"
 	threads: 8
-	params:
-		sn = get_sample
 	shell:
 		"mkdir -p fastp \n"
 		"/home/jiapengc/.conda/envs/QC/bin/fastp --in1 {input.r1} "
@@ -53,34 +49,28 @@ rule fastp:
 		"--thread 8"
         
 
-rule map2human: #draft
+rule map2human: #bowtie2 mapping, sam2bam, bamstat
 	input:
 		r1 = "fastp/{sample}.r1.fq.gz",
 		r2 = "fastp/{sample}.r2.fq.gz"
 	output:
-		"{sample}.sam"
+		bam = "map2human/{sample}.bam",
+		json = "map2human/{sample}.bamstat.json"
+	threads: 8
 	shell:
+		"mkdir -p map2human \n"
 		"/home/jiapengc/.conda/envs/biobakery3/bin/bowtie2 -x /data/databases/human/GRCh38_latest_genomic.fna "
 		"-1 {input.r1} -2 {input.r2} "
-		"-S {sample}.sam "
-		"--un-conc-gz {sample}_host_removed.fastq.gz "
-		"--sensitive --threads 8"
-
-
-rule sam2bam: #draft
-	input:
-		"{sample}.sam"
-	output:
-		"{sample}.bam"
-	shell:
-		"/home/jiapengc/.conda/envs/QC/bin/samtools view -bS --threads 8 out.sam > out.bam"
-		"/home/jiapengc/bin/bamstats --cpu 5 --input out.bam > bamstat.json"
+		"--un-conc-gz map2human/{wildcards.sample}_host_removed.fq.gz "
+		"--sensitive --threads 4 | "
+		"/home/jiapengc/.conda/envs/QC/bin/samtools view -bS -@ 4 > {output.bam} \n"
+		"/home/jiapengc/bin/bamstats --cpu 8 --input {output.bam} > {output.json}"
 
 
 rule catFq:
 	input:
-		r1 = "fastp/{sample}.r1.fq.gz",
-		r2 = "fastp/{sample}.r2.fq.gz"
+		r1 = "map2human/{sample}_host_removed.fq.1.gz",
+		r2 = "map2human/{sample}_host_removed.fq.2.gz"
 
 	output:
 		r1r2fq = "catFq/{sample}.r1r2.fq"
