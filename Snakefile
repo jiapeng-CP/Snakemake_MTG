@@ -113,7 +113,7 @@ rule MetaPhlan:
 	threads: 8
 	shell:
 		"mkdir -p MetaPhlan \n"
-		"metaphlan --nproc {threads} --offline --input_type fastq --add_viruses -t rel_ab_w_read_stats "
+		"metaphlan --nproc {threads} --offline --input_type fastq --add_viruses "
 		"--output_file {output.profiletxt} {input.fq} > {log} 2>&1"
 
 
