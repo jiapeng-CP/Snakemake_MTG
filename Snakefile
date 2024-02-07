@@ -19,8 +19,7 @@ def get_fastq2(wildcards):
 
 rule all:
         input:
-                expand("map2human/{sample}.bam", sample=SAMPLES),
-                #expand("MetaPhlan/{sample}.txt", sample=SAMPLES),
+                expand("MetaPhlan/{sample}.txt", sample=SAMPLES),
                 #expand("map2HOMD/{sample}.json", sample=SAMPLES),
 
 
@@ -36,7 +35,7 @@ rule fastp:
 		json = "fastp/{sample}.json",
 		html = "fastp/{sample}.html"
 
-	log: "logs/{sample}.fastp.log"
+	log: "logs/fastp.{sample}.log"
 	threads: 8
 	shell:
 		"mkdir -p fastp \n"
@@ -46,7 +45,8 @@ rule fastp:
 		"--out2 {output.r2} "
 		"--json {output.json} "
 		"--html {output.html} "
-		"--thread 8"
+		"--thread {threads} "
+		"2> {log}"
         
 
 rule map2human: #bowtie2 mapping, sam2bam, bamstat
@@ -55,7 +55,8 @@ rule map2human: #bowtie2 mapping, sam2bam, bamstat
 		r2 = "fastp/{sample}.r2.fq.gz"
 	output:
 		bam = "map2human/{sample}.bam",
-		json = "map2human/{sample}.bamstat.json"
+		json = "map2human/{sample}.bamstat.json",
+		unmap = ["map2human/{sample}_host_removed.fq.1.gz", "map2human/{sample}_host_removed.fq.2.gz"]
 	threads: 8
 	shell:
 		"mkdir -p map2human \n"
@@ -94,7 +95,7 @@ rule catFq:
 
 	output:
 		r1r2fq = "catFq/{sample}.r1r2.fq"
-	log: "logs/catFq.log"
+	log: "logs/catFq.{sample}.log"
 	shell:
 		"mkdir -p catFq \n"
 		"zcat {input.r1} {input.r2} > {output} 2> {log}"
@@ -105,7 +106,7 @@ rule MetaPhlan:
 		fq = "catFq/{sample}.r1r2.fq"
 	output:
 		profiletxt = "MetaPhlan/{sample}.txt"
-	log: "logs/{sample}.MetaPhlan.log"
+	log: "logs/MetaPhlan.{sample}.log"
 	threads: 8
 	shell:
 		"mkdir -p MetaPhlan \n"
@@ -123,7 +124,7 @@ rule humann: # conda activate /home/artemisl/.conda/envs/biobakery
 	shell:
 		"mkdir -p HumanN \n"
 		"/home/artemisl/.conda/envs/biobakery/bin/humann "
-		"--metaphlan-options=\"--offline\" --threads 8 "
+		"--metaphlan-options=\"--offline\" --threads {threads} "
 		"--nucleotide-database /home/jiapengc/db/humannDB/chocophlan "
 		"--protein-database /home/jiapengc/db/humannDB/uniref "
 		"--input {input.fq} --output {output.ofolder} > {log} 2>&1"
