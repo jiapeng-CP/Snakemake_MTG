@@ -109,7 +109,7 @@ rule MetaPhlan:
 	threads: 8
 	shell:
 		"mkdir -p MetaPhlan \n"
-		"metaphlan --nproc 8 --offline --input_type fastq --output_file {output.profiletxt} {input.fq} > {log} 2>&1"
+		"metaphlan --nproc 8 --offline --input_type fastq --add_viruses --output_file {output.profiletxt} {input.fq} > {log} 2>&1"
 
 
 rule humann: # conda activate /home/artemisl/.conda/envs/biobakery
