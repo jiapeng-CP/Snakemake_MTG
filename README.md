@@ -58,7 +58,7 @@ In your workding directory, make a sample sheet with file name `samplesheet.tsv`
 ### Step 3 pre-execute Snakemake
 In the directory, running
 ```
-/home/jiapengc/.conda/envs/QC/bin/snakemake --dag | dot -Tsvg > pipeline.svg
+/home/jiapengc/mambaforge/envs/snakemake/bin/snakemake --dag | dot -Tsvg > pipeline.svg
 ```
 will produce a svg graph to show the specific steps that will be executed. Below is an example svg you can find at /home/jiapengc/SNpipeline/pipeline.svg.
 
@@ -74,7 +74,7 @@ conda activate /home/artemisl/.conda/envs/biobakery
 ```
 Run Snakemake that will parse Snakefile in the current directory
 ```
-/home/jiapengc/.conda/envs/QC/bin/snakemake --core 32
+/home/jiapengc/mambaforge/envs/snakemake/bin/snakemake --core 32
 ```
 This command will execute the pipeline and it will create 4 folders where it deposites output files of the 4 steps.
 *   KneadData
