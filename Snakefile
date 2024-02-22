@@ -48,6 +48,10 @@ rule fastp:
 		"--thread {threads} "
 		"2> {log}"
         
+rule multiqc:
+	input: expand("fastp/{sample}.json", sample=SAMPLES)
+	output: "multiqc_report.html"
+	shell: "/home/jiapengc/mambaforge/bin/multiqc fastp/*"
 
 rule map2human: #bowtie2 mapping, sam2bam, bamstat
 	input:
