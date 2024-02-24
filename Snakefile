@@ -127,7 +127,7 @@ rule humann: # conda activate /home/artemisl/.conda/envs/biobakery
 	log: "logs/{sample}.humann.stdouterr.log"
 	threads: 8
 	output:
-		ofolder = "HumanN/{sample}"
+		ofolder = directory("HumanN/{sample}")
 	shell:
 		"mkdir -p HumanN \n"
 		"/home/artemisl/.conda/envs/biobakery/bin/humann "
