@@ -68,9 +68,9 @@ will produce a svg graph to show the specific steps that will be executed. Below
 
 In the figure, two samples `EM9232022LRM01HP1` and `EM9232022LRM24hrUT1` are analyzed by the Snakemake pipeline, starting with KneadData, concatenate FASTQ files produced by KneadData, then MetaPhlan and HumanN in parallel.
 ### Step 4 execute Snakemake
-Activate Artemis Biobakery conda environment
+Activate Biobakery conda environment
 ```
-conda activate /home/artemisl/.conda/envs/biobakery
+conda activate /home/jiapengc/bin/biobakery4
 ```
 Run Snakemake that will parse Snakefile in the current directory
 ```

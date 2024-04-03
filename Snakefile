@@ -18,9 +18,9 @@ def get_fastq2(wildcards):
 	return(samplesDF.loc[wildcards.sample,'fq2'])
 
 rule all:
-        input:
-                expand("MetaPhlan/{sample}.txt", sample=SAMPLES),
-                #expand("map2HOMD/{sample}.json", sample=SAMPLES),
+	input:
+		expand("MetaPhlan/{sample}.txt", sample=SAMPLES),
+		expand("HumanN/{sample}", sample=SAMPLES)
 
 
 
@@ -65,7 +65,7 @@ rule map2human: #bowtie2 mapping, sam2bam, bamstat
 	log: "logs/map2human.{sample}.log"
 	shell:
 		"mkdir -p map2human \n"
-		"/home/jiapengc/.conda/envs/biobakery3/bin/bowtie2 -x /data/databases/human/GRCh38_latest_genomic.fna "
+		"bowtie2 -x /data/databases/human/GRCh38_latest_genomic.fna "
 		"-1 {input.r1} -2 {input.r2} "
 		"--un-conc-gz map2human/{wildcards.sample}_host_removed.fq.gz "
 		#"--met-stderr --quiet " # met is not a summary of the alignment e.g. mapping rate etc.
@@ -88,7 +88,7 @@ rule map2HOMD:
 	log: "logs/map2HOMD.{sample}.log"
 	shell:
 		"mkdir -p map2HOMD \n"
-		"/home/jiapengc/.conda/envs/biobakery3/bin/bowtie2 -x /home/jiapengc/db/HOMD/ALL_genomes.fna "
+		"bowtie2 -x /home/jiapengc/db/HOMD/ALL_genomes.fna "
 		"-1 {input.r1} -2 {input.r2} "
 		"--sensitive --threads 4 2> {log} | "
 		"/home/jiapengc/.conda/envs/QC/bin/samtools view -bS -@ 4 > {output.bam} \n"
@@ -118,20 +118,25 @@ rule MetaPhlan:
 	shell:
 		"mkdir -p MetaPhlan \n"
 		"metaphlan --nproc {threads} --offline --input_type fastq --add_viruses "
+		"--bowtie2db /home/artemisl/metaphlan_db/ --index mpa_vJun23_CHOCOPhlAnSGB_202403 "
 		"--output_file {output.profiletxt} {input.fq} > {log} 2>&1"
 
 
 rule humann: # conda activate /home/artemisl/.conda/envs/biobakery
 	input:
-		fq = "catFq/{sample}.r1r2.fq"
+		fq = "catFq/{sample}.r1r2.fq",
+		metaphlano = "MetaPhlan/{sample}.txt"
 	log: "logs/{sample}.humann.stdouterr.log"
 	threads: 8
 	output:
 		ofolder = directory("HumanN/{sample}")
 	shell:
 		"mkdir -p HumanN \n"
-		"/home/artemisl/.conda/envs/biobakery/bin/humann "
-		"--metaphlan-options=\"--offline\" --threads {threads} "
+		"humann "
+		"--taxonomic-profile {input.metaphlano} "
+		#"--metaphlan-options=\"--offline\ " 
+		"--threads {threads} "
 		"--nucleotide-database /home/jiapengc/db/humannDB/chocophlan "
 		"--protein-database /home/jiapengc/db/humannDB/uniref "
+		#"--memory-use minimum "
 		"--input {input.fq} --output {output.ofolder} > {log} 2>&1"
