@@ -56,7 +56,7 @@ Copy the provided Snakefile to your working directory:
 git clone https://github.com/jiapeng-CP/Snakemake_MTG && cp Snakemake_MTG/Snakefile yourwd
 ```
 ### Step 2 make sample sheet
-Within your working directory, create a tab-separated sample sheet named samplesheet.tsv with three columns: Sample, fq1, fq2. A template can be found at [/home/jiapengc/SNpipeline/samplesheet.tsv](https://github.com/jiapeng-CP/Snakemake_MTG/blob/main/samplesheet.tsv).
+Within your working directory, create a tab-separated sample sheet named samplesheet.tsv with three columns: Sample, fq1, fq2. A template can be found at https://github.com/jiapeng-CP/Snakemake_MTG/blob/main/samplesheet.tsv.
 
 ### Step 3 pre-execute Snakemake
 Generate a visual representation of the workflow steps to be executed:
