@@ -88,7 +88,7 @@ rule map2HOMD:
 	log: "logs/map2HOMD.{sample}.log"
 	shell:
 		"mkdir -p map2HOMD \n"
-		"bowtie2 -x /home/jiapengc/db/HOMD/ALL_genomes.fna "
+		"bowtie2 -x /home/jiapengc/db/HOMD/V10.1/ALL_genomes.fna "
 		"-1 {input.r1} -2 {input.r2} "
 		"--sensitive --threads 4 2> {log} | "
 		"/home/jiapengc/.conda/envs/QC/bin/samtools view -bS -@ 4 > {output.bam} \n"
