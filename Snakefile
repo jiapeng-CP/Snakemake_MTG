@@ -107,7 +107,7 @@ rule MetaPhlan:
 	threads: 8
 	shell:
 		"mkdir -p catFq_tmp \n"
-		"zcat {input.r1} {input.r2} > {output.r1r2fq} \n"
+		"zcat {input.r1} {input.r2} > {output.r1r2fq} && rm {input.r1} {input.r2} \n"
 		"mkdir -p MetaPhlan \n"
 		"metaphlan --nproc {threads} --offline --input_type fastq --add_viruses --no_map "
 		"--bowtie2db /home/artemisl/metaphlan_db/ --index mpa_vJun23_CHOCOPhlAnSGB_202403 "
