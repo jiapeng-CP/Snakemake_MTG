@@ -76,7 +76,7 @@ conda activate /home/jiapengc/bin/biobakery4
 ```
 Run Snakemake that will parse Snakefile in the current directory
 ```
-/home/jiapengc/mambaforge/envs/snakemake/bin/snakemake --core 32
+/home/jiapengc/mambaforge/envs/snakemake/bin/snakemake --core 32 --report workflow.report.html
 ```
 The pipeline will generate output files in four designated folders corresponding to each analysis step:
 

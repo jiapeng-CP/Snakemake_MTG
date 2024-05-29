@@ -19,7 +19,6 @@ def get_fastq2(wildcards):
 
 rule all:
 	input:
-		expand("MetaPhlan/{sample}.txt", sample=SAMPLES),
 		expand("HumanN/{sample}", sample=SAMPLES)
 
 
@@ -90,41 +89,34 @@ rule map2HOMD:
 		"mkdir -p map2HOMD \n"
 		"bowtie2 -x /home/jiapengc/db/HOMD/V10.1/ALL_genomes.fna "
 		"-1 {input.r1} -2 {input.r2} "
-		"--sensitive --threads 4 2> {log} | "
-		"/home/jiapengc/.conda/envs/QC/bin/samtools view -bS -@ 4 > {output.bam} \n"
+		"--sensitive --threads 7 2> {log} | "
+		"/home/jiapengc/.conda/envs/QC/bin/samtools view -bS -@ 1 > {output.bam} \n"
 		"/home/jiapengc/bin/bamstats --cpu 8 --input {output.bam} > {output.json} 2>> {log}"
 
 
-rule catFq:
-	input:
-		r1 = "map2human/{sample}_host_removed.fq.1.gz",
-		r2 = "map2human/{sample}_host_removed.fq.2.gz"
-
-	output:
-		r1r2fq = "catFq/{sample}.r1r2.fq"
-	log: "logs/catFq.{sample}.log"
-	shell:
-		"mkdir -p catFq \n"
-		"zcat {input.r1} {input.r2} > {output} 2> {log}"
 
 
 rule MetaPhlan:
 	input:
-		fq = "catFq/{sample}.r1r2.fq"
+		r1 = "map2human/{sample}_host_removed.fq.1.gz",
+		r2 = "map2human/{sample}_host_removed.fq.2.gz"
 	output:
+		r1r2fq = "catFq_tmp/{sample}.r1r2.fq",
 		profiletxt = "MetaPhlan/{sample}.txt"
 	log: "logs/MetaPhlan.{sample}.log"
 	threads: 8
 	shell:
+		"mkdir -p catFq_tmp \n"
+		"zcat {input.r1} {input.r2} > {output.r1r2fq} \n"
 		"mkdir -p MetaPhlan \n"
-		"metaphlan --nproc {threads} --offline --input_type fastq --add_viruses "
+		"metaphlan --nproc {threads} --offline --input_type fastq --add_viruses --no_map "
 		"--bowtie2db /home/artemisl/metaphlan_db/ --index mpa_vJun23_CHOCOPhlAnSGB_202403 "
-		"--output_file {output.profiletxt} {input.fq} > {log} 2>&1"
+		"--output_file {output.profiletxt} {output.r1r2fq} > {log} 2>&1"
 
 
-rule humann: # conda activate /home/artemisl/.conda/envs/biobakery
+rule humann: 
 	input:
-		fq = "catFq/{sample}.r1r2.fq",
+		fq = "catFq_tmp/{sample}.r1r2.fq",
 		metaphlano = "MetaPhlan/{sample}.txt"
 	log: "logs/{sample}.humann.stdouterr.log"
 	threads: 8
@@ -134,9 +126,9 @@ rule humann: # conda activate /home/artemisl/.conda/envs/biobakery
 		"mkdir -p HumanN \n"
 		"humann "
 		"--taxonomic-profile {input.metaphlano} "
-		#"--metaphlan-options=\"--offline\ " 
-		"--threads {threads} "
+		#"--metaphlan-options=\"--offline\ " no need with --taxonomic-profile
+		"--threads {threads} --remove-temp-output "
 		"--nucleotide-database /home/jiapengc/db/humannDB/chocophlan "
 		"--protein-database /home/jiapengc/db/humannDB/uniref "
-		#"--memory-use minimum "
-		"--input {input.fq} --output {output.ofolder} > {log} 2>&1"
+		"--input {input.fq} --output {output.ofolder} > {log} 2>&1 && "
+		"rm {input.fq}"
