@@ -76,13 +76,16 @@ conda activate /home/jiapengc/bin/biobakery4
 ```
 Run Snakemake that will parse Snakefile in the current directory
 ```
-/home/jiapengc/mambaforge/envs/snakemake/bin/snakemake --core 32 --report workflow.report.html
+/home/jiapengc/mambaforge/envs/snakemake/bin/snakemake --core 32 
 ```
 The pipeline will generate output files in four designated folders corresponding to each analysis step:
 
 *   FastP
-*   catFq
 *   MetaPhlan
 *   HumanN
 
+Run the below command to generate a report html that details resources and time used for the tasks
+```
+/home/jiapengc/mambaforge/envs/snakemake/bin/snakemake --report workflow.report.html
+```
 
