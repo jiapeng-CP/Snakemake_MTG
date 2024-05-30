@@ -116,7 +116,7 @@ rule MetaPhlan:
 
 rule humann: 
 	input:
-		fq = "catFq_tmp/{sample}.r1r2.fq",
+		fq = "catFq_tmp/{sample}.r1r2.fq", # should set fq as intermediate file. this rule rm (update) the fq at then end, will rerun in next snakemake: reason: Input files updated by another job
 		metaphlano = "MetaPhlan/{sample}.txt"
 	log: "logs/{sample}.humann.stdouterr.log"
 	threads: 8
