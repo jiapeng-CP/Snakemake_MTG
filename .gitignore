@@ -1,1 +1,10 @@
 command.log
+report*html
+nohup.out
+catFq/
+fastp/
+HumanN/
+logs/
+map2HOMD/
+map2human/
+MetaPhlan/

@@ -1,3 +1,9 @@
+
+# merge tables from individual samples for MetaPhlan
+~/bin/biobakery4/bin/merge_metaphlan_tables.py MetaPhlan/*txt > merged.metaphlan.txt
+
+
+
 # merge tables from individual samples for HumanN
 /home/artemisl/.conda/envs/biobakery/bin/humann_join_tables --input HumanN --search-subdirectories --file_name genefamilies.tsv --output merge.humann.genef.tsv &
 /home/artemisl/.conda/envs/biobakery/bin/humann_join_tables --input HumanN --search-subdirectories --file_name pathabundance.tsv --output merge.humann.patha.tsv &

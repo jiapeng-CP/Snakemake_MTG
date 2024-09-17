@@ -1,3 +1,3 @@
 Sample	fq1	fq2
-EM9232022LRM01HP1	/home/fatimas/MTG_analyses/Peroxide_MTG/fastq_files/EM9232022LRM01HP1_S11_R1_001.fastq	/home/fatimas/MTG_analyses/Peroxide_MTG/fastq_files/EM9232022LRM01HP1_S11_R2_001.fastq
-EM9232022LRM24hrUT1	/home/fatimas/MTG_analyses/Peroxide_MTG/fastq_files/EM9232022LRM24hrUT1_S2_R1_001.fastq	/home/fatimas/MTG_analyses/Peroxide_MTG/fastq_files/EM9232022LRM24hrUT1_S2_R2_001.fastq
+UTD101	/home/jiapengc/vendors/Brinta_72MTG/zcatFq/BC-230713-UTD1-01_R1.fq	/home/jiapengc/vendors/Brinta_72MTG/zcatFq/BC-230713-UTD1-01_R2.fq
+TtestD303	/home/jiapengc/vendors/Brinta_72MTG/zcatFq/BC-230713-TtestD3-03_R1.fq	/home/jiapengc/vendors/Brinta_72MTG/zcatFq/BC-230713-TtestD3-03_R2.fq

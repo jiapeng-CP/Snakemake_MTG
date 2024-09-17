@@ -18,10 +18,8 @@ def get_fastq2(wildcards):
 	return(samplesDF.loc[wildcards.sample,'fq2'])
 
 rule all:
-        input:
-                expand("map2human/{sample}.bam", sample=SAMPLES),
-                #expand("MetaPhlan/{sample}.txt", sample=SAMPLES),
-                #expand("map2HOMD/{sample}.json", sample=SAMPLES),
+	input:
+		expand("HumanN/{sample}", sample=SAMPLES)
 
 
 
@@ -36,7 +34,7 @@ rule fastp:
 		json = "fastp/{sample}.json",
 		html = "fastp/{sample}.html"
 
-	log: "logs/{sample}.fastp.log"
+	log: "logs/fastp.{sample}.log"
 	threads: 8
 	shell:
 		"mkdir -p fastp \n"
@@ -46,8 +44,13 @@ rule fastp:
 		"--out2 {output.r2} "
 		"--json {output.json} "
 		"--html {output.html} "
-		"--thread 8"
+		"--thread {threads} "
+		"2> {log}"
         
+rule multiqc:
+	input: expand("fastp/{sample}.json", sample=SAMPLES)
+	output: "multiqc_report.html"
+	shell: "/home/jiapengc/mambaforge/bin/multiqc fastp/*"
 
 rule map2human: #bowtie2 mapping, sam2bam, bamstat
 	input:
@@ -55,16 +58,19 @@ rule map2human: #bowtie2 mapping, sam2bam, bamstat
 		r2 = "fastp/{sample}.r2.fq.gz"
 	output:
 		bam = "map2human/{sample}.bam",
-		json = "map2human/{sample}.bamstat.json"
+		json = "map2human/{sample}.bamstat.json",
+		unmap = ["map2human/{sample}_host_removed.fq.1.gz", "map2human/{sample}_host_removed.fq.2.gz"]
 	threads: 8
+	log: "logs/map2human.{sample}.log"
 	shell:
 		"mkdir -p map2human \n"
-		"/home/jiapengc/.conda/envs/biobakery3/bin/bowtie2 -x /data/databases/human/GRCh38_latest_genomic.fna "
+		"bowtie2 -x /data/databases/human/GRCh38_latest_genomic.fna "
 		"-1 {input.r1} -2 {input.r2} "
 		"--un-conc-gz map2human/{wildcards.sample}_host_removed.fq.gz "
-		"--sensitive --threads 4 | "
+		#"--met-stderr --quiet " # met is not a summary of the alignment e.g. mapping rate etc.
+		"--sensitive --threads 4 2> {log} | "
 		"/home/jiapengc/.conda/envs/QC/bin/samtools view -bS -@ 4 > {output.bam} \n"
-		"/home/jiapengc/bin/bamstats --cpu 8 --input {output.bam} > {output.json}"
+		"/home/jiapengc/bin/bamstats --cpu 8 --input {output.bam} > {output.json} 2>> {log}"
 
 rule map2HOMD:
 	input:
@@ -78,51 +84,51 @@ rule map2HOMD:
 		bam = "map2HOMD/{sample}.bam",
 		json = "map2HOMD/{sample}.json"
 	threads: 8
+	log: "logs/map2HOMD.{sample}.log"
 	shell:
 		"mkdir -p map2HOMD \n"
-		"/home/jiapengc/.conda/envs/biobakery3/bin/bowtie2 -x /home/jiapengc/db/HOMD/ALL_genomes.fna "
+		"bowtie2 -x /home/jiapengc/db/HOMD/V10.1/ALL_genomes.fna "
 		"-1 {input.r1} -2 {input.r2} "
-		"--sensitive --threads 4 | "
-		"/home/jiapengc/.conda/envs/QC/bin/samtools view -bS -@ 4 > {output.bam} \n"
-		"/home/jiapengc/bin/bamstats --cpu 8 --input {output.bam} > {output.json}"
+		"--sensitive --threads 7 2> {log} | "
+		"/home/jiapengc/.conda/envs/QC/bin/samtools view -bS -@ 1 > {output.bam} \n"
+		"/home/jiapengc/bin/bamstats --cpu 8 --input {output.bam} > {output.json} 2>> {log}"
 
 
-rule catFq:
-	input:
-		r1 = "map2human/{sample}_host_removed.fq.1.gz",
-		r2 = "map2human/{sample}_host_removed.fq.2.gz"
-
-	output:
-		r1r2fq = "catFq/{sample}.r1r2.fq"
-	log: "logs/catFq.log"
-	shell:
-		"mkdir -p catFq \n"
-		"zcat {input.r1} {input.r2} > {output} 2> {log}"
 
 
 rule MetaPhlan:
 	input:
-		fq = "catFq/{sample}.r1r2.fq"
+		r1 = "map2human/{sample}_host_removed.fq.1.gz",
+		r2 = "map2human/{sample}_host_removed.fq.2.gz"
 	output:
+		r1r2fq = "catFq_tmp/{sample}.r1r2.fq",
 		profiletxt = "MetaPhlan/{sample}.txt"
-	log: "logs/{sample}.MetaPhlan.log"
+	log: "logs/MetaPhlan.{sample}.log"
 	threads: 8
 	shell:
+		"mkdir -p catFq_tmp \n"
+		"zcat {input.r1} {input.r2} > {output.r1r2fq} && rm {input.r1} {input.r2} \n"
 		"mkdir -p MetaPhlan \n"
-		"metaphlan --nproc 8 --offline --input_type fastq --output_file {output.profiletxt} {input.fq} > {log} 2>&1"
+		"metaphlan --nproc {threads} --offline --input_type fastq --add_viruses --no_map "
+		"--bowtie2db /home/artemisl/metaphlan_db/ --index mpa_vJun23_CHOCOPhlAnSGB_202403 "
+		"--output_file {output.profiletxt} {output.r1r2fq} > {log} 2>&1"
 
 
-rule humann: # conda activate /home/artemisl/.conda/envs/biobakery
+rule humann: 
 	input:
-		fq = "catFq/{sample}.r1r2.fq"
+		fq = "catFq_tmp/{sample}.r1r2.fq", # should set fq as intermediate file. this rule rm (update) the fq at then end, will rerun in next snakemake: reason: Input files updated by another job
+		metaphlano = "MetaPhlan/{sample}.txt"
 	log: "logs/{sample}.humann.stdouterr.log"
 	threads: 8
 	output:
-		ofolder = "HumanN/{sample}"
+		ofolder = directory("HumanN/{sample}")
 	shell:
 		"mkdir -p HumanN \n"
-		"/home/artemisl/.conda/envs/biobakery/bin/humann "
-		"--metaphlan-options=\"--offline\" --threads 8 "
+		"humann "
+		"--taxonomic-profile {input.metaphlano} "
+		#"--metaphlan-options=\"--offline\ " no need with --taxonomic-profile
+		"--threads {threads} --remove-temp-output "
 		"--nucleotide-database /home/jiapengc/db/humannDB/chocophlan "
 		"--protein-database /home/jiapengc/db/humannDB/uniref "
-		"--input {input.fq} --output {output.ofolder} > {log} 2>&1"
+		"--input {input.fq} --output {output.ofolder} > {log} 2>&1 && "
+		"rm {input.fq}"
