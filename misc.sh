@@ -12,9 +12,9 @@
 
 
 # produce individual funtional tables
-humann_regroup_table -i merge.humann.genef.tsv -g uniref90_ko -o humann.ko.tsv &
-humann_regroup_table -i merge.humann.genef.tsv -g uniref90_rxn -o humann.rxn.tsv &
-humann_regroup_table -i merge.humann.genef.tsv -g uniref90_go -o humann.go.tsv &
-humann_regroup_table -i merge.humann.genef.tsv -g uniref90_level4ec -o humann.level4ec.tsv &
-humann_regroup_table -i merge.humann.genef.tsv -g uniref90_pfam -o humann.pfam.tsv &
-humann_regroup_table -i merge.humann.genef.tsv -g uniref90_eggnog -o humann.eggnog.tsv &
+~/bin/biobakery4/bin/humann_regroup_table -i merge.humann.genef.tsv -g uniref90_ko -o humann.ko.tsv &
+~/bin/biobakery4/bin/humann_regroup_table -i merge.humann.genef.tsv -g uniref90_rxn -o humann.rxn.tsv &
+~/bin/biobakery4/bin/humann_regroup_table -i merge.humann.genef.tsv -g uniref90_go -o humann.go.tsv &
+~/bin/biobakery4/bin/humann_regroup_table -i merge.humann.genef.tsv -g uniref90_level4ec -o humann.level4ec.tsv &
+~/bin/biobakery4/bin/humann_regroup_table -i merge.humann.genef.tsv -g uniref90_pfam -o humann.pfam.tsv &
+~/bin/biobakery4/bin/humann_regroup_table -i merge.humann.genef.tsv -g uniref90_eggnog -o humann.eggnog.tsv &
