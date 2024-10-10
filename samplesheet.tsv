@@ -1,3 +1,3 @@
 Sample	fq1	fq2
-P1_Saliva_V1_10k	/home/jiapengc/MTGdev/subreadsets/P1_Saliva_V1_10k_1.fq.gz	/home/jiapengc/MTGdev/subreadsets/P1_Saliva_V1_10k_2.fq.gz
-P1_Tongue_V1_10k	/home/jiapengc/MTGdev/subreadsets/P1_Tongue_V1_10k_1.fq.gz	/home/jiapengc/MTGdev/subreadsets/P1_Tongue_V1_10k_2.fq.gz
+P1_Saliva_V1_10k	/home/jiapengc/MTGdev/subreadsets/P1_Saliva_V1_10k_1.fq	/home/jiapengc/MTGdev/subreadsets/P1_Saliva_V1_10k_2.fq
+P1_Tongue_V1_10k	/home/jiapengc/MTGdev/subreadsets/P1_Tongue_V1_10k_1.fq	/home/jiapengc/MTGdev/subreadsets/P1_Tongue_V1_10k_2.fq
