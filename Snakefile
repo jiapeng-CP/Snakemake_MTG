@@ -19,7 +19,9 @@ def get_fastq2(wildcards):
 
 rule all:
 	input:
-		expand("HumanN/{sample}", sample=SAMPLES)
+		expand("HumanN/{sample}", sample=SAMPLES),
+		expand("MetaPhlan/{sample}.txt", sample=SAMPLES),
+		"multiqc_report.html"
 
 
 
@@ -109,7 +111,7 @@ rule MetaPhlan:
 		"mkdir -p catFq_tmp \n"
 		"zcat {input.r1} {input.r2} > {output.r1r2fq} && rm {input.r1} {input.r2} \n"
 		"mkdir -p MetaPhlan \n"
-		"metaphlan --nproc {threads} --offline --input_type fastq --add_viruses --no_map "
+		"/home/jiapengc/.conda/envs/biobakery/bin/metaphlan -t rel_ab_w_read_stats --nproc {threads} --offline --input_type fastq --add_viruses --no_map "
 		"--bowtie2db /home/jiapengc/db/metaphlan_db --index mpa_vJun23_CHOCOPhlAnSGB_202403 "
 		"--output_file {output.profiletxt} {output.r1r2fq} > {log} 2>&1"
 
