@@ -80,4 +80,4 @@ for s in metaDF.index:
     df = pd.concat([df, new_row], ignore_index=True)
 
 # Save the final DataFrame with all metrics to a TSV file
-df.to_csv("fastp.allsample.tsv", sep='\t', index=False)
+df.to_csv("Sequencing.metrics.tsv", sep='\t', index=False)
