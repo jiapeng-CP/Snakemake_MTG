@@ -21,7 +21,8 @@ rule all:
 	input:
 		expand("HumanN/{sample}", sample=SAMPLES),
 		expand("MetaPhlan/{sample}.txt", sample=SAMPLES),
-		"multiqc_report.html"
+		"multiqc_report.html",
+		"combined_metaphlan_results.tsv"
 
 
 
@@ -115,6 +116,15 @@ rule MetaPhlan:
 		"--bowtie2db /home/jiapengc/db/metaphlan_db --index mpa_vJun23_CHOCOPhlAnSGB_202403 "
 		"--output_file {output.profiletxt} {output.r1r2fq} > {log} 2>&1"
 
+rule combine_metaphlan:
+    input:
+        expand("MetaPhlan/{sample}.txt", sample=SAMPLES)
+    output:
+        "combined_metaphlan_results.tsv"
+    log:
+        "logs/combine_metaphlan.log"
+    shell:
+        "/home/jiapengc/mambaforge/bin/python3 combine_metaphlan_results.py > {log} 2>&1"
 
 rule humann: 
 	input:

@@ -31,12 +31,14 @@ def main():
             
             # Load data into a pandas DataFrame
             data = pd.read_csv(file, sep="\t", comment='#',
-                                names=['clade_name', 'clade_taxid', 'relative_abundance', 'estimated_number_of_reads_from_the_clade'],
+                                names=['taxonomy_description', 'NCBI_taxonomy_id', 'relative_abundance', 'coverage', 'number_of_reads_metaphlan'],
+                                #taxonomy_description    NCBI_taxonomy_id        relative_abundance      number_of_reads_metaphlan       sample_name
                                 header=None,
                                 index_col=False
                                 )
             
-            
+            # Transform NCBI_taxonomy_id to keep only the last number after '|'
+            data['NCBI_taxonomy_id'] = data['NCBI_taxonomy_id'].apply(lambda x: x.split('|')[-1])
             
             # Add sample_name column
             data['sample_name'] = sample_name
@@ -56,7 +58,7 @@ def main():
     combined_df = pd.concat(dfs, ignore_index=True)
 
     # Reorder columns and save to a TSV file
-    combined_df = combined_df[['clade_name', 'clade_taxid', 'relative_abundance', 'estimated_number_of_reads_from_the_clade', 'sample_name']]
+    combined_df = combined_df[['taxonomy_description', 'NCBI_taxonomy_id', 'relative_abundance', 'number_of_reads_metaphlan', 'sample_name']]
     combined_df.to_csv(output_file, sep="\t", index=False)
     print(f"Combined results saved to {output_file}")
 
