@@ -22,6 +22,7 @@ rule all:
                 expand("HumanN/{sample}", sample=SAMPLES),
                 expand("MetaPhlan/{sample}.txt", sample=SAMPLES),
                 "multiqc_report.html",
+		"combined_metaphlan_results.tsv",
                 "Sequencing.metrics.tsv"
 
 
