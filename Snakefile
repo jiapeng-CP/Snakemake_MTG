@@ -18,11 +18,11 @@ def get_fastq2(wildcards):
 	return(samplesDF.loc[wildcards.sample,'fq2'])
 
 rule all:
-	input:
-		expand("HumanN/{sample}", sample=SAMPLES),
-		expand("MetaPhlan/{sample}.txt", sample=SAMPLES),
-		"multiqc_report.html",
-		"combined_metaphlan_results.tsv"
+        input:
+                expand("HumanN/{sample}", sample=SAMPLES),
+                expand("MetaPhlan/{sample}.txt", sample=SAMPLES),
+                "multiqc_report.html",
+                "Sequencing.metrics.tsv"
 
 
 
@@ -50,6 +50,14 @@ rule fastp:
 		"--thread {threads} "
 		"2> {log}"
         
+rule FqMetrics:
+        input:
+                json = expand("fastp/{sample}.json", sample=SAMPLES)
+        output:
+                "Sequencing.metrics.tsv"
+        shell:
+                "/home/jiapengc/mambaforge/bin/python3 sumFastP.py"
+
 rule multiqc:
 	input: expand("fastp/{sample}.json", sample=SAMPLES)
 	output: "multiqc_report.html"
