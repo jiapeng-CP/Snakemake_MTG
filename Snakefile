@@ -71,7 +71,7 @@ rule map2human: #bowtie2 mapping, sam2bam, bamstat
 	output:
 		bam = "map2human/{sample}.bam",
 		json = "map2human/{sample}.bamstat.json",
-		unmap = ["map2human/{sample}_host_removed.fq.1.gz", "map2human/{sample}_host_removed.fq.2.gz"]
+		temp_unmap = temp(["map2human/{sample}_host_removed.fq.1.gz", "map2human/{sample}_host_removed.fq.2.gz"])
 	threads: 8
 	log: "logs/map2human.{sample}.log"
 	shell:
@@ -119,7 +119,7 @@ rule MetaPhlan:
 	threads: 8
 	shell:
 		"mkdir -p catFq_tmp \n"
-		"zcat {input.r1} {input.r2} > {output.r1r2fq} && rm {input.r1} {input.r2} \n"
+		"zcat {input.r1} {input.r2} > {output.r1r2fq} \n"
 		"mkdir -p MetaPhlan \n"
 		"/home/jiapengc/.conda/envs/biobakery/bin/metaphlan -t rel_ab_w_read_stats --nproc {threads} --offline --input_type fastq --add_viruses --no_map "
 		"--bowtie2db /home/jiapengc/db/metaphlan_db --index mpa_vJun23_CHOCOPhlAnSGB_202403 "
