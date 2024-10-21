@@ -108,22 +108,31 @@ rule map2HOMD:
 
 
 
-rule MetaPhlan:
+rule concat_r1r2:
 	input:
 		r1 = "map2human/{sample}_host_removed.fq.1.gz",
 		r2 = "map2human/{sample}_host_removed.fq.2.gz"
 	output:
+		r1r2fq = temp("catFq_tmp/{sample}.r1r2.fq")
+	shell:
+		"""
+		mkdir -p catFq_tmp
+		zcat {input.r1} {input.r2} > {output.r1r2fq}
+		"""
+
+rule MetaPhlan:
+	input:
 		r1r2fq = "catFq_tmp/{sample}.r1r2.fq",
 		profiletxt = "MetaPhlan/{sample}.txt"
 	log: "logs/MetaPhlan.{sample}.log"
 	threads: 8
 	shell:
-		"mkdir -p catFq_tmp \n"
-		"zcat {input.r1} {input.r2} > {output.r1r2fq} \n"
-		"mkdir -p MetaPhlan \n"
-		"/home/jiapengc/.conda/envs/biobakery/bin/metaphlan -t rel_ab_w_read_stats --nproc {threads} --offline --input_type fastq --add_viruses --no_map "
-		"--bowtie2db /home/jiapengc/db/metaphlan_db --index mpa_vJun23_CHOCOPhlAnSGB_202403 "
-		"--output_file {output.profiletxt} {output.r1r2fq} > {log} 2>&1"
+		"""
+		mkdir -p MetaPhlan
+		/home/jiapengc/.conda/envs/biobakery/bin/metaphlan -t rel_ab_w_read_stats --nproc {threads} --offline --input_type fastq --add_viruses --no_map \
+		--bowtie2db /home/jiapengc/db/metaphlan_db --index mpa_vJun23_CHOCOPhlAnSGB_202403 \
+		--output_file {output.profiletxt} {input.r1r2fq} > {log} 2>&1
+		"""
 
 rule combine_metaphlan:
     input:
@@ -135,21 +144,22 @@ rule combine_metaphlan:
     shell:
         "/home/jiapengc/mambaforge/bin/python3 combine_metaphlan_results.py > {log} 2>&1"
 
-rule humann: 
+
+rule humann:
 	input:
-		fq = "catFq_tmp/{sample}.r1r2.fq", # should set fq as intermediate file. this rule rm (update) the fq at then end, will rerun in next snakemake: reason: Input files updated by another job
+		fq = "catFq_tmp/{sample}.r1r2.fq", 
 		metaphlano = "MetaPhlan/{sample}.txt"
 	log: "logs/{sample}.humann.stdouterr.log"
 	threads: 8
 	output:
 		ofolder = directory("HumanN/{sample}")
 	shell:
-		"mkdir -p HumanN \n"
-		"humann "
-		"--taxonomic-profile {input.metaphlano} "
-		#"--metaphlan-options=\"--offline\ " no need with --taxonomic-profile
-		"--threads {threads} --remove-temp-output "
-		"--nucleotide-database /home/jiapengc/db/humannDB/chocophlan "
-		"--protein-database /home/jiapengc/db/humannDB/uniref "
-		"--input {input.fq} --output {output.ofolder} > {log} 2>&1 && "
-		"rm {input.fq}"
+		"""
+		mkdir -p HumanN
+		humann \
+		    --taxonomic-profile {input.metaphlano} \
+		    --threads {threads} --remove-temp-output \
+		    --nucleotide-database /home/jiapengc/db/humannDB/chocophlan \
+		    --protein-database /home/jiapengc/db/humannDB/uniref \
+		    --input {input.fq} --output {output.ofolder} > {log} 2>&1
+		"""
