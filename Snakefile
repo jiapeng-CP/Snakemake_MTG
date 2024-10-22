@@ -23,7 +23,8 @@ rule all:
                 expand("MetaPhlan/{sample}.txt", sample=SAMPLES),
                 "multiqc_report.html",
 		"combined_metaphlan_results.tsv",
-                "Sequencing.metrics.tsv"
+                "Sequencing.metrics.tsv",
+		expand("Kraken2/{sample}_kraken2_output.txt", sample=SAMPLES)
 
 
 
@@ -123,6 +124,7 @@ rule concat_r1r2:
 rule MetaPhlan:
 	input:
 		r1r2fq = "catFq_tmp/{sample}.r1r2.fq",
+	output:
 		profiletxt = "MetaPhlan/{sample}.txt"
 	log: "logs/MetaPhlan.{sample}.log"
 	threads: 8
@@ -162,4 +164,26 @@ rule humann:
 		    --nucleotide-database /home/jiapengc/db/humannDB/chocophlan \
 		    --protein-database /home/jiapengc/db/humannDB/uniref \
 		    --input {input.fq} --output {output.ofolder} > {log} 2>&1
+		"""
+
+# kraken2 needs 74.4g mem for 1 sample (db k2_pluspf_20231009)
+rule kraken2:
+	input:
+		r1 = "map2human/{sample}_host_removed.fq.1.gz",
+		r2 = "map2human/{sample}_host_removed.fq.2.gz"
+	output:
+		report = "Kraken2/{sample}_kraken2_report.txt",
+		output = "Kraken2/{sample}_kraken2_output.txt"
+	log:
+		"logs/kraken2_{sample}.log"
+	threads: 8
+	shell:
+		"""
+		mkdir -p Kraken2
+		/home/jiapengc/miniforge3/envs/kraken2/bin/kraken2 --quick \
+			--db /home/jiapengc/db/Kraken2/k2_pluspf_20231009 \
+			--threads {threads} \
+			--report {output.report} \
+			--output {output.output} \
+			--paired {input.r1} {input.r2} > {log} 2>&1
 		"""
