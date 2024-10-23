@@ -23,7 +23,8 @@ rule all:
 		"multiqc_report.html",
 		"combined_metaphlan_results.tsv",
 		"Sequencing.metrics.tsv",
-		expand("Kraken2/{sample}_kraken2_output.txt", sample=SAMPLES)
+		expand("Kraken2/{sample}_kraken2_output.txt", sample=SAMPLES),
+		expand("bracken_reports/{sample}.breport", sample=SAMPLES)
 
 rule fastp:
 	input:
@@ -183,4 +184,30 @@ rule kraken2:
 			--report {output.report} \
 			--output {output.output} \
 			--paired {input.r1} {input.r2} > {log} 2>&1
+		"""
+
+rule bracken:
+	input:
+		report = "Kraken2/{sample}_kraken2_report.txt"
+	output:
+		bracken_output = "bracken_outputs/{sample}.bracken",
+		bracken_report = "bracken_reports/{sample}.breport"
+	log:
+		"logs/bracken_{sample}.log"
+	params:
+		bracken_db = "/home/jiapengc/db/Kraken2/k2_pluspf_20231009",
+		read_length = 150,
+		level = "S",
+		threshold = 10
+	shell:
+		"""
+		mkdir -p bracken_outputs bracken_reports
+		/home/jiapengc/miniforge3/envs/kraken2/bin/bracken \
+			-d {params.bracken_db} \
+			-i {input.report} \
+			-r {params.read_length} \
+			-l {params.level} \
+			-t {params.threshold} \
+			-o {output.bracken_output} \
+			-w {output.bracken_report} > {log} 2>&1
 		"""
