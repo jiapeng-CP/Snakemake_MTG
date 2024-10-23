@@ -5,7 +5,6 @@ SAMPLES = []
 sampleFq1 = {}
 sampleFq2 = {}
 
-
 for x in samplesDF.index:
 	SAMPLES.append(x)
 	sampleFq1[x] = samplesDF.loc[x,'fq1']
@@ -18,29 +17,26 @@ def get_fastq2(wildcards):
 	return(samplesDF.loc[wildcards.sample,'fq2'])
 
 rule all:
-        input:
-                expand("HumanN/{sample}", sample=SAMPLES),
-                expand("MetaPhlan/{sample}.txt", sample=SAMPLES),
-                "multiqc_report.html",
+	input:
+		expand("HumanN/{sample}", sample=SAMPLES),
+		expand("MetaPhlan/{sample}.txt", sample=SAMPLES),
+		"multiqc_report.html",
 		"combined_metaphlan_results.tsv",
-                "Sequencing.metrics.tsv",
+		"Sequencing.metrics.tsv",
 		expand("Kraken2/{sample}_kraken2_output.txt", sample=SAMPLES)
-
-
 
 rule fastp:
 	input:
 		r1 = get_fastq1,
 		r2 = get_fastq2
-
 	output:
 		r1 = "fastp/{sample}.r1.fq.gz",
 		r2 = "fastp/{sample}.r2.fq.gz",
 		json = "fastp/{sample}.json",
 		html = "fastp/{sample}.html"
-
 	log: "logs/fastp.{sample}.log"
 	threads: 8
+	benchmark: "benchmarks/fastp.{sample}.txt"
 	shell:
 		"mkdir -p fastp \n"
 		"/home/jiapengc/.conda/envs/QC/bin/fastp --in1 {input.r1} "
@@ -51,18 +47,20 @@ rule fastp:
 		"--html {output.html} "
 		"--thread {threads} "
 		"2> {log}"
-        
+
 rule FqMetrics:
-        input:
-                json = expand("fastp/{sample}.json", sample=SAMPLES)
-        output:
-                "Sequencing.metrics.tsv"
-        shell:
-                "/home/jiapengc/mambaforge/bin/python3 sumFastP.py"
+	input:
+		json = expand("fastp/{sample}.json", sample=SAMPLES)
+	output:
+		"Sequencing.metrics.tsv"
+	benchmark: "benchmarks/FqMetrics.txt"
+	shell:
+		"/home/jiapengc/mambaforge/bin/python3 sumFastP.py"
 
 rule multiqc:
 	input: expand("fastp/{sample}.json", sample=SAMPLES)
 	output: "multiqc_report.html"
+	benchmark: "benchmarks/multiqc.txt"
 	shell: "/home/jiapengc/mambaforge/bin/multiqc fastp/*"
 
 rule map2human: #bowtie2 mapping, sam2bam, bamstat
@@ -75,6 +73,7 @@ rule map2human: #bowtie2 mapping, sam2bam, bamstat
 		temp_unmap = temp(["map2human/{sample}_host_removed.fq.1.gz", "map2human/{sample}_host_removed.fq.2.gz"])
 	threads: 8
 	log: "logs/map2human.{sample}.log"
+	benchmark: "benchmarks/map2human.{sample}.txt"
 	shell:
 		"mkdir -p map2human \n"
 		"bowtie2 -x /data/databases/human/GRCh38_latest_genomic.fna "
@@ -87,10 +86,6 @@ rule map2human: #bowtie2 mapping, sam2bam, bamstat
 
 rule map2HOMD:
 	input:
-		#below fq1&fq2 are the input files, but it won't match the output file names above
-		#fq1 = "map2human/{sample}_host_removed.fq.1.gz",
-		#fq2 = "map2human/{sample}_host_removed.fq.2.gz"
-		#humanstat = "map2human/{sample}.bamstat.json" # this rule doesn't need the human json, put it here as a proxy
 		r1 = "fastp/{sample}.r1.fq.gz", # use fastp reads instead of human rm reads
 		r2 = "fastp/{sample}.r2.fq.gz"
 	output:
@@ -98,6 +93,7 @@ rule map2HOMD:
 		json = "map2HOMD/{sample}.json"
 	threads: 8
 	log: "logs/map2HOMD.{sample}.log"
+	benchmark: "benchmarks/map2HOMD.{sample}.txt"
 	shell:
 		"mkdir -p map2HOMD \n"
 		"bowtie2 -x /home/jiapengc/db/HOMD/V10.1/ALL_genomes.fna "
@@ -106,15 +102,13 @@ rule map2HOMD:
 		"/home/jiapengc/.conda/envs/QC/bin/samtools view -bS -@ 1 > {output.bam} \n"
 		"/home/jiapengc/bin/bamstats --cpu 8 --input {output.bam} > {output.json} 2>> {log}"
 
-
-
-
 rule concat_r1r2:
 	input:
 		r1 = "map2human/{sample}_host_removed.fq.1.gz",
 		r2 = "map2human/{sample}_host_removed.fq.2.gz"
 	output:
 		r1r2fq = temp("catFq_tmp/{sample}.r1r2.fq")
+	benchmark: "benchmarks/concat_r1r2.{sample}.txt"
 	shell:
 		"""
 		mkdir -p catFq_tmp
@@ -123,11 +117,12 @@ rule concat_r1r2:
 
 rule MetaPhlan:
 	input:
-		r1r2fq = "catFq_tmp/{sample}.r1r2.fq",
+		r1r2fq = "catFq_tmp/{sample}.r1r2.fq"
 	output:
 		profiletxt = "MetaPhlan/{sample}.txt"
 	log: "logs/MetaPhlan.{sample}.log"
 	threads: 8
+	benchmark: "benchmarks/MetaPhlan.{sample}.txt"
 	shell:
 		"""
 		mkdir -p MetaPhlan
@@ -137,15 +132,15 @@ rule MetaPhlan:
 		"""
 
 rule combine_metaphlan:
-    input:
-        expand("MetaPhlan/{sample}.txt", sample=SAMPLES)
-    output:
-        "combined_metaphlan_results.tsv"
-    log:
-        "logs/combine_metaphlan.log"
-    shell:
-        "/home/jiapengc/mambaforge/bin/python3 combine_metaphlan_results.py > {log} 2>&1"
-
+	input:
+		expand("MetaPhlan/{sample}.txt", sample=SAMPLES)
+	output:
+		"combined_metaphlan_results.tsv"
+	log:
+		"logs/combine_metaphlan.log"
+	benchmark: "benchmarks/combine_metaphlan.txt"
+	shell:
+		"/home/jiapengc/mambaforge/bin/python3 combine_metaphlan_results.py > {log} 2>&1"
 
 rule humann:
 	input:
@@ -155,6 +150,7 @@ rule humann:
 	threads: 8
 	output:
 		ofolder = directory("HumanN/{sample}")
+	benchmark: "benchmarks/humann.{sample}.txt"
 	shell:
 		"""
 		mkdir -p HumanN
@@ -177,6 +173,7 @@ rule kraken2:
 	log:
 		"logs/kraken2_{sample}.log"
 	threads: 8
+	benchmark: "benchmarks/kraken2.{sample}.txt"
 	shell:
 		"""
 		mkdir -p Kraken2
