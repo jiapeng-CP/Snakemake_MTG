@@ -24,7 +24,8 @@ rule all:
 		"combined_metaphlan_results.tsv",
 		"Sequencing.metrics.tsv",
 		expand("Kraken2/{sample}_kraken2_output.txt", sample=SAMPLES),
-		expand("bracken_reports/{sample}.breport", sample=SAMPLES)
+		expand("bracken_reports/{sample}.breport", sample=SAMPLES),
+		"kraken2_otu_table.biom"
 
 rule fastp:
 	input:
@@ -210,4 +211,19 @@ rule bracken:
 			-t {params.threshold} \
 			-o {output.bracken_output} \
 			-w {output.bracken_report} > {log} 2>&1
+		"""
+
+
+
+rule kraken2biom:
+	input:
+		expand("Kraken2/{sample}_kraken2_report.txt", sample=SAMPLES)
+	output:
+		"kraken2_otu_table.biom"
+	log:
+		"logs/kraken2biom.log"
+	shell:
+		"""
+		mkdir -p logs
+		/home/jiapengc/miniforge3/envs/kraken2/bin/kraken-biom {input} --fmt json -o {output} > {log} 2>&1
 		"""
